@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Template Mamalujo</title>
+
+<link href="css/style.css" rel="stylesheet">
+<script src="js/jquery.js"></script>
+<script src="js/bootstrap.min.js"></script>
+<script src="js/jquery-ui.js"></script>
+
+<style>
+.ui-autocomplete {
+    width:100px;
+    font-size: 10px;
+}
+.ui-autocomplete-input {
+    width:300px;
+    padding:0;
+    margin:0;
+    z-index:1000;
+    font-size: 20px;
+}
+.ui-widget {
+  font-family: Verdana,Arial,sans-serif;
+  font-size: 15px;
+}
+.ui-menu-item {
+            border: 2px solid #5d7e93;
+            border-radius: 0.25rem;
+            background-color: #f2eded;
+            .ui-state-active,
+    .ui-widget-content .ui-state-active,
+    .ui-widget-header .ui-state-active,
+    a.ui-button:active,
+    .ui-button:active,
+    .ui-button.ui-state-active:hover {
+            background-color: #5d7e93;
+            border-color: #5d7e93;
+            color: #000916;
+            }
+    }
+</style>
+<script type="application/javascript">
+    window.onload = changeSelect;
+
+    function changeSelect()
+    {
+        var availableTags = [];
+        $.ajax({
+            type: "GET",
+            url: "https://api.mlab.com/api/1/databases/mamalujo/collections/cliente?f={"+'"'+"nome"+'"'+": 1}&apiKey=b4E5Nh8ntCjxFdnbvWuELE990BTDK8at",
+            dataType: "json",
+            data: { get_param: 'value' },
+            success: function(data)
+            {
+            	$.each(data,function(i, cliente)
+              {
+            	    proximo = availableTags.length;
+                  availableTags[proximo] = data[i]["nome"];
+              });
+            }
+        });
+      $( "#tags" ).autocomplete({
+        source: availableTags,
+        focus: function(event, ui) {
+					// prevent autocomplete from updating the textbox
+					event.preventDefault();
+					// manually update the textbox
+          //$(this).val(ui.item.label);
+				},
+				select: function(event, ui) {
+					// prevent autocomplete from updating the textbox
+					event.preventDefault();
+          consulta(ui.item.value);
+          ui.item.text="";
+					// manually update the textbox and hidden field
+          //alert(ui.item.value);
+				},
+        html: true,
+        open: function(event, ui) {
+          // prevent autocomplete from updating the textbox
+          event.preventDefault();
+          ui.item.text="";
+          // manually update the textbox and hidden field
+          // alert(ui.item.value);
+        },
+        messages: {
+                      noResults: '',
+                      results: ''
+                  },
+
+      });
+    }
+
+</script>
+<script type="application/javascript">
+    function consulta(nome){
+        limpar()
+        //$("div [role='"'+"status"+'"']").is(':hidden');//.prop('display':'none');//disabled = true;
+	//var seleciona = document.getElementById('listanome');
+        //var nome = seleciona.options[seleciona.selectedIndex].text;
+	//var nome = document.getElementById('tags').value;
+        $("#qtde").html("<center>Foram encontrado "+nome+" cliente(s)</center>");
+	$.ajax({
+	    type: "GET",
+            url: "https://api.mlab.com/api/1/databases/mamalujo/collections/cliente?q={"+'"'+"nome"+'"'+":"+'"'+nome+'"'+"}&apiKey=b4E5Nh8ntCjxFdnbvWuELE990BTDK8at",
+	    dataType: "json",
+	    data: { get_param: 'value' },
+            success: function(data) {
+
+		$.each(data,function(i, cliente){
+		    consultaAuto(data[i]["nome"])
+                    var item = "<tr><td>"+data[i]["nome"]+"</td><td>"+data[i]["cpf"]+"</td><td>"+data[i]["condutor"]+"</td></tr>";
+                    $("#tabCli").append(item);
+                    });
+		$("#qtde").html("<center>Foram encontrado "+data.length+" cliente(s)</center>");
+            }
+        }); }
+    function limpar(){
+	var tabel = document.getElementById('tabCli');
+	tabel.removeChild(tabel.getElementsByTagName("tbody")[0]);
+	$("#tabCli").append("<tr><th>Nome</th><th>CPF</th><th>Condutor</th></tr>");
+
+	var tabel = document.getElementById('tabAuto');
+	tabel.removeChild(tabel.getElementsByTagName("tbody")[0]);
+	$("#tabAuto").append("<tr><th>Carro</th><th>Seguro</th><th>Vigencia</th></tr>");
+  //$("div [role='"'+"status"+'"']").is(':hidden');
+}
+
+</script>
+
+<script type="application/javascript">
+    function consultaAuto(nome){
+	$.ajax({
+	    type: "GET",
+            url: "https://api.mlab.com/api/1/databases/mamalujo/collections/auto?q={"+'"'+"nome"+'"'+":"+'"'+nome+'"'+"}&apiKey=b4E5Nh8ntCjxFdnbvWuELE990BTDK8at",
+	    dataType: "json",
+	    data: { get_param: 'value' },
+            success: function(data) {
+
+		$.each(data,function(i, cliente){
+
+                    var item = "<tr><td>"+data[i]["veiculo"]+"</td><td>"+data[i]["seguradora"]+"</td><td>"+data[i]["vigencia"]+"</td></tr>";
+                    $("#tabAuto").append(item);
+                    });
+            }
+        }); }
+
+    function limparAuto(){
+        	var tabel = document.getElementById('tabAuto');
+        	tabel.removeChild(tabel.getElementsByTagName("tbody")[0]);
+        	$("#tabAuto").append("<tr><th>Nome</th><th>CPF</th><th>Condutor</th></tr>");
+
+    }
+
+</script>
+</head>
+<body>
+  <div class="container-fluid">
+     <header class="row">
+       <div class="col-xs-12"><img src="img/seguro2.png"/></div>
+     </header>
+     <div class="row">
+
+       <div role="main">
+         <div class="col-xs-12">
+
+           <div class="ui-widget">
+             <label for="tags">Cliente: </label>
+             <input id="tags" class="ui-autocomplete-input" autocomplete="off">
+
+         </div>
+
+         <div>
+           <table id="tabCli" style="font-family:arial;font-size:10px; ">
+           <tr><th>Nome</th><th>CPF</th><th>Condutor</th></tr>
+           <tbody></tbody>
+           </table>
+         </div>
+         <div>
+           <table id="tabAuto" style="font-family:arial;font-size:10px; ">
+           <tr><th>Carro</th><th>Seguro</th><th>Vigencia</th></tr>
+           <tbody></tbody>
+           </table>
+         <div>
+
+       </div>
+     </div>
+     <footer class="row">
+        <div id="qtde"></div>
+         <a href="index.html">voltar</a>
+     </footer>
+  </div>
+</div>
+
+</body>
+</html>
